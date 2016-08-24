@@ -13,7 +13,7 @@ import com.mongodb.spark.config.WriteConfig;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrameWriter;
-
+import com.mongodb.spark.config.ReadConfig;
 
 public class App 
 {
@@ -28,7 +28,7 @@ public class App
     	
     	JavaSparkContext jsc = new JavaSparkContext(sc); // create a java spark context
     	
-    	Map<String, String> writeOverrides = new HashMap<String, String>();
+    Map<String, String> writeOverrides = new HashMap<String, String>();
     	writeOverrides.put("collection", "spark");
     	writeOverrides.put("writeConcern.w", "majority");
     	WriteConfig writeConfig = WriteConfig.create(jsc).withOptions(writeOverrides);
@@ -44,7 +44,17 @@ public class App
     	MongoSpark.save(sparkDocuments, writeConfig);
     	
     	
-        
+
+    	// Loading data with a custom ReadConfig
+    	Map<String, String> readOverrides = new HashMap<String, String>();
+    	readOverrides.put("collection", "spark");
+    	readOverrides.put("readPreference.name", "secondaryPreferred");
+    	ReadConfig readConfig = ReadConfig.create(jsc).withOptions(readOverrides);
+
+    	JavaRDD<Document> customRdd = MongoSpark.load(jsc, readConfig);
+
+    	System.out.println(customRdd.count());
+    	System.out.println(customRdd.first().toJson());
         
         
         
